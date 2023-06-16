@@ -11,10 +11,7 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>
 #include <iostream>
-<<<<<<< HEAD
-=======
 #include<sstream>
->>>>>>> 9639516 (Added basic template for database and server)
 
 using namespace std;
 
@@ -70,20 +67,12 @@ void do_task(int connfd, struct sockaddr_in *cliaddr, socklen_t clilen)
 
 		if (n == 0)	// connection closed from client side
 		{
-<<<<<<< HEAD
-			cout << prefix << ": Connection closed from client." << endl;
-=======
 			cout << prefix << "Connection closed from client." << endl;
->>>>>>> 9639516 (Added basic template for database and server)
 			exit(0);
 		}
 	
 		buff[n] = '\0';
-<<<<<<< HEAD
-		cout << prefix << ": Data received: '" << buff << "'" << endl;
-=======
 		cout << prefix << "Data received: '" << buff << "'" << endl;
->>>>>>> 9639516 (Added basic template for database and server)
 	}
 }
 
