@@ -10,9 +10,9 @@
 #include <sys/msg.h>
 #include <sys/wait.h>
 #include <arpa/inet.h>
+#include <iostream>
 
-#define MAX_PENDING 5
-#define BUFFERSIZE 32
+using namespace std;
 
 typedef void Sigfunc(int);
 
@@ -44,31 +44,35 @@ void sig_child(int signo)
 	int stat;
 
 	while ((pid = waitpid(-1, &stat, WNOHANG)) > 0)
-		printf("Child terminated: %d\n", pid);
+		cout << "Child terminated with status: " << stat << endl;
 }
 
 void do_task(int connfd, int qid, struct sockaddr_in *cliaddr, socklen_t clilen)
 {
-	int n;
-	char buff[256];
-	printf("Handling client: %s\n",  inet_ntoa(cliaddr->sin_addr));
+	auto prefix = inet_ntoa(cliaddr->sin_addr);
+	cout << prefix << ": Connection established." << endl;
 
-here:
-	n = read(connfd, buff, 256);
-
-	if (n < 0)
+	while (true)
 	{
-		perror("read error");
-		exit(-1);
+		// read atmax 256 bytes from buffer
+		char buff[256];
+		int n = read(connfd, buff, 256);
+		
+		if (n < 0)
+		{
+			perror("read error");
+			exit(-1);
+		}
+
+		if (n == 0)	// connection closed from client side
+		{
+			cout << prefix << ": Connection closed from client." << endl;
+			exit(0);
+		}
+	
+		buff[n] = '\0';
+		cout << prefix << ": Data received: '" << buff << "'" << endl;
 	}
-
-	if (n == 0)	// connection closed from client side
-		exit(0);
-
-	buff[n] = '\0';
-	printf("%s: %s\n", inet_ntoa(cliaddr->sin_addr), buff);
-
-	goto here;
 }
 
 int main(int argc, char** argv)
@@ -78,7 +82,7 @@ int main(int argc, char** argv)
 
 	if (argc != 2)
 	{
-		printf("usage: server.o <PORT number>\n");
+		cout << "usage: server.o <PORT number>" << endl;
 		exit(1);
 	}
 
@@ -102,9 +106,8 @@ int main(int argc, char** argv)
 		perror("binding error");
 		exit(1);
 	}
-	
 
-	printf("Listening to PORT %d...\n", ntohs(servaddr.sin_port));
+	cout << "Listening to PORT " << ntohs(servaddr.sin_port) << "..." << endl;
 
 	// move from CLOSED to LISTEN state, create passive socket
 	if (listen(listenfd, 5) < 0)
