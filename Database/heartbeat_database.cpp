@@ -25,8 +25,9 @@ void do_task(int sockfd)
 	{
 		cout << "Preparing Data..." << endl;
 		sleep(2);		// sleep for 1 second
-
 		BUFF[0] = 'A' + i;
+
+		cout << "Sending: " << BUFF << endl;
 		n = write(sockfd, BUFF, 2);
 
 		if (n < 0)

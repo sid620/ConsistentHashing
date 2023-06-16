@@ -11,6 +11,10 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>
 #include <iostream>
+<<<<<<< HEAD
+=======
+#include<sstream>
+>>>>>>> 9639516 (Added basic template for database and server)
 
 using namespace std;
 
@@ -21,8 +25,6 @@ typedef struct
 	int type;
 	char c;
 } my_msg;
-
-int qid;
 
 Sigfunc* Signal(int signo, Sigfunc* func)
 {
@@ -47,10 +49,12 @@ void sig_child(int signo)
 		cout << "Child terminated with status: " << stat << endl;
 }
 
-void do_task(int connfd, int qid, struct sockaddr_in *cliaddr, socklen_t clilen)
+void do_task(int connfd, struct sockaddr_in *cliaddr, socklen_t clilen)
 {
-	auto prefix = inet_ntoa(cliaddr->sin_addr);
-	cout << prefix << ": Connection established." << endl;
+	std::stringstream ss;
+	ss << inet_ntoa(cliaddr->sin_addr)  << ":" << ntohs(cliaddr->sin_port) << ": ";
+	auto prefix = ss.str();
+	cout << prefix << "Connection established." << endl;
 
 	while (true)
 	{
@@ -66,12 +70,20 @@ void do_task(int connfd, int qid, struct sockaddr_in *cliaddr, socklen_t clilen)
 
 		if (n == 0)	// connection closed from client side
 		{
+<<<<<<< HEAD
 			cout << prefix << ": Connection closed from client." << endl;
+=======
+			cout << prefix << "Connection closed from client." << endl;
+>>>>>>> 9639516 (Added basic template for database and server)
 			exit(0);
 		}
 	
 		buff[n] = '\0';
+<<<<<<< HEAD
 		cout << prefix << ": Data received: '" << buff << "'" << endl;
+=======
+		cout << prefix << "Data received: '" << buff << "'" << endl;
+>>>>>>> 9639516 (Added basic template for database and server)
 	}
 }
 
@@ -140,7 +152,7 @@ int main(int argc, char** argv)
 		if ((childpid = fork()) == 0)
 		{
 			close(listenfd);
-			do_task(connfd, qid, (struct sockaddr_in*)&clilen, sizeof(clilen));
+			do_task(connfd, (struct sockaddr_in*)&cliaddr, clilen);
 			exit(0);
 		}
 
