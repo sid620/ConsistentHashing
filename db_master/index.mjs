@@ -46,11 +46,12 @@ function get_tcp_socket(port) {
   return tcp_socket;
 }
 
-let [udp, tcp] = [get_udp_socket(heartbeat_port), get_tcp_socket(heartbeat_port)];
+let tcp = get_tcp_socket(heartbeat_port);
 
+/*
 udp.on('data', (msg, rinfo) => {
   console.log(`UDP got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-});
+});*/
 
 tcp.on('connection', sock => {
   console.log('TCP Connected: ' + sock.remoteAddress + ':' + sock.remotePort);

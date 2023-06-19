@@ -1,10 +1,24 @@
 'use strict';
 import * as net from 'net';
-const heartbeat_port = process.env.HEARTBEAT_PORT ?? 8081;
+const heartbeat_port = process.env.HEARTBEAT_PORT ?? 8085;
+const server_name = process.env.SERVER_NAME ?? 'localhost';
 
-const client = new net.Socket();
+let client = null;
 
-setTimeout(() => client.connect(heartbeat_port, 'db_master', function() {
-  console.log('Connected');
-  client.write("Hello From Client " + client.address().address);
-}), 1000);
+try{
+  client = new net.Socket();
+} catch (error) {
+  console.log(error);
+}
+
+
+setTimeout(() => {
+    const socket = client.connect(heartbeat_port, server_name, function() {
+      console.log('Connected');
+      client.write("Hello From Client " + client.address().address);
+    });
+
+    socket.on('close', err => console.log("Closed"));
+
+    socket.on('error', err => console.log(err));
+}, 1000);
