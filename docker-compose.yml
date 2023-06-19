@@ -1,16 +1,13 @@
 version: "3.8"
 
 services:
-  backend:
-    build: ./BackendServer
-    ports:
-      - 8000:8080
+  db_master:
+    build: ./db_master
     environment:
-      - SERVER_HEARTBEAT_PORT=8081
-  database:
-    build: ./Database
+      - HEARTBEAT_PORT=8081
+  db_node1:
+    build: ./db_node
     environment:
-      - SERVER_HEARTBEAT_PORT=8081
-      - SERVER_NAME=backend
+      - HEARTBEAT_PORT=8081
     depends_on:
-      - backend
+      - db_master

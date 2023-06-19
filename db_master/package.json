@@ -1,0 +1,12 @@
+{
+  "name": "databasemaster",
+  "version": "1.0.0",
+  "description": "Database master which will handle incoming requests to database from client and will delegate them to database nodes.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}

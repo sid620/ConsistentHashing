@@ -1,0 +1,12 @@
+{
+  "name": "databasenode",
+  "version": "1.0.0",
+  "description": "Database node which will handle the requests from database master.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}
