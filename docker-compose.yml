@@ -5,6 +5,7 @@ services:
     build: ./db_master
     environment:
       - HEARTBEAT_PORT=8081
+      - SERVER_NAME=db_master
     networks:
       - mynetwork
   db_node1:

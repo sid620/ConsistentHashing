@@ -3,6 +3,7 @@ import dgram from 'node:dgram';
 import * as net from 'net';
 
 const heartbeat_port = process.env.HEARTBEAT_PORT ?? 8081;
+const server_name = process.env.SERVER_NAME ?? 'localhost';
 
 function get_udp_socket(port) {
   // create socket
@@ -38,7 +39,7 @@ function get_tcp_socket(port) {
   });
 
   // start tcp server
-  tcp_socket.listen(port, 'localhost', () => {
+  tcp_socket.listen(port, server_name, () => {
     const address = tcp_socket.address();
     console.log(`Heartbeat TCP Process started on ${address.address}:${address.port}`);
   });
@@ -46,12 +47,12 @@ function get_tcp_socket(port) {
   return tcp_socket;
 }
 
-let tcp = get_tcp_socket(heartbeat_port);
+let [udp, tcp] = [get_udp_socket(heartbeat_port), get_tcp_socket(heartbeat_port)];
 
-/*
+
 udp.on('data', (msg, rinfo) => {
   console.log(`UDP got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-});*/
+});
 
 tcp.on('connection', sock => {
   console.log('TCP Connected: ' + sock.remoteAddress + ':' + sock.remotePort);

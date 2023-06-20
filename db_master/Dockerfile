@@ -8,7 +8,4 @@ RUN npm install
 
 COPY . .
 
-RUN apt update
-RUN apt install tcpdump -y
-
 CMD [ "node", "index.mjs" ]
