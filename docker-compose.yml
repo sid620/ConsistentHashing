@@ -7,16 +7,16 @@ services:
       - HEARTBEAT_PORT=8081
       - SERVER_NAME=db_master
     networks:
-      - mynetwork
+      - chnetwork
   db_node1:
     build: ./db_node
     environment:
       - HEARTBEAT_PORT=8081
       - SERVER_NAME=db_master
     networks:
-      - mynetwork
+      - chnetwork
     depends_on:
       - db_master
 
 networks:
-  mynetwork:
+  chnetwork:

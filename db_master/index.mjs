@@ -1,63 +1,45 @@
-'use strict';
-import dgram from 'node:dgram';
-import * as net from 'net';
+import {
+  get_udp_socket,
+  get_tcp_socket
+} from './network/sockets.mjs';
+import config from './config.mjs';
 
-const heartbeat_port = process.env.HEARTBEAT_PORT ?? 8081;
-const server_name = process.env.SERVER_NAME ?? 'localhost';
+// Initialise server
+const server_name = config.server_name;
+const heartbeat_port = config.heartbeat_port;
 
-function get_udp_socket(port) {
-  // create socket
-  const udp_socket = dgram.createSocket('udp4');
-  
-  // event listener in case of error
-  udp_socket.on("error", error => {
-    udp_socket.close();
-    console.log(`UDP Server Error: ${error.message}`);
-    throw error;
+const [udp, tcp] = [
+  get_udp_socket(server_name, heartbeat_port),
+  get_tcp_socket(server_name, heartbeat_port)
+];
+
+// Create a list of active connections
+const active_servers = new Set();
+
+// Register
+tcp.on('connection', sock => {
+  const IP = sock.remoteAddress;
+  const PORT = sock.remotePort;
+  const name = `${IP}:${PORT}`;
+
+  console.log(`${name}: Connection established.`);
+
+  // register a database
+  sock.on('data', data => {
+    if (data == "Connect me as database!") {
+      active_servers.add(IP);
+      sock.write('Registered as database node.');
+      sock.destroy();
+    } else {
+      sock.write(`Invalid request parameter '${data}'.`);
+    }
   });
 
-  // start udp server
-  udp_socket.on('listening', () => {
-    const address = udp_socket.address();
-    console.log(`Heartbeat UDP Process started on ${address.address}:${address.port}`);
-  });
-  
-  udp_socket.bind(port);
-
-  return udp_socket;
-}
-
-function get_tcp_socket(port) {
-  // create socket
-  const tcp_socket = net.createServer();
-
-  // event listener in case of error
-  tcp_socket.on("error", error => {
-    tcp_socket.close();
-    console.log(`TCP Server Error: ${error.message}`);
-    throw error;
-  });
-
-  // start tcp server
-  tcp_socket.listen(port, server_name, () => {
-    const address = tcp_socket.address();
-    console.log(`Heartbeat TCP Process started on ${address.address}:${address.port}`);
-  });
-
-  return tcp_socket;
-}
-
-let [udp, tcp] = [get_udp_socket(heartbeat_port), get_tcp_socket(heartbeat_port)];
-
-
-udp.on('data', (msg, rinfo) => {
-  console.log(`UDP got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+  sock.on('close', _ => console.log(`Connection closed with ${name}\n`));
 });
 
-tcp.on('connection', sock => {
-  console.log('TCP Connected: ' + sock.remoteAddress + ':' + sock.remotePort);
 
-  sock.on('data', data => console.log(`Data received from ${sock.remoteAddress} : ${data}`));
-
-  sock.on('close', _ => console.log('TCP Closed: ' + sock.remoteAddress + ' ' + sock.remotePort));
+// Heartbeat
+udp.on('data', (msg, rinfo) => {
+  console.log(`UDP got: ${msg} from ${rinfo.address}:${rinfo.port}\n`);
 });
