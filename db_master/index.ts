@@ -1,5 +1,4 @@
 import {
-  get_udp_socket,
   get_tcp_socket
 } from './network/sockets';
 import * as config from './config';

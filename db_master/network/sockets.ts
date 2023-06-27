@@ -33,11 +33,6 @@ export function get_udp_socket(self_name: string, port: number) {
   return { onMessage, onError, send, closeSocket };
 }
 
-const splitSocketName = (name: string): { IP: string; PORT: number } => {
-  const split = name.split(':');
-  return { IP: split[0], PORT: parseInt(split[1]) };
-};
-
 export function get_tcp_socket(self_name: string, port: number) {
   // create socket
   const tcp_socket = net.createServer();
