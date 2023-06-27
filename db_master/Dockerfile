@@ -4,6 +4,9 @@ WORKDIR /usr/src/app
 
 COPY . .
 
+# Build Project
 RUN npm install
+RUN npx tsc
 
-CMD [ "node", "index.mjs" ]
+# Run it
+CMD node build/index.js

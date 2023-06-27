@@ -2,7 +2,7 @@ import {
   get_udp_socket,
   get_tcp_socket
 } from './network/sockets';
-import config from './config.mjs';
+import * as config from './config';
 
 // Initialise server
 const server_name = config.server_name;
