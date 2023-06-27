@@ -48,7 +48,7 @@ udp_socket.on('error', err => {
   udp_socket.close();
 });
 
-let ignore_hearbeat = 3;
+// let ignore_hearbeat = 3;
 
 // event listener for incoming messages
 udp_socket.on('message', (msg, rinfo) => {
@@ -56,10 +56,10 @@ udp_socket.on('message', (msg, rinfo) => {
 
   const messageString = msg.toString();
   if (messageString === "Heartbeat") {
-    if(ignore_hearbeat > 0) {
-      ignore_hearbeat--;
-      return;
-    }
+    // if(ignore_hearbeat > 0) {
+    //   ignore_hearbeat--;
+    //   return;
+    // }
 
     console.log(`Sending heartbeat to ${rinfo.address}:${rinfo.port}`);
 
