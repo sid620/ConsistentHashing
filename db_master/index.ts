@@ -33,13 +33,16 @@ tcp.onConnectionClose((IP, PORT) => console.log(`Connection closed with ${IP}:${
 
 // send heartbeat to all active servers every 5 seconds
 setInterval(() => {
+
+  // check number of active servers
   console.log(`Active servers: ${active_servers.size}`);
+
   active_servers.forEach((properties, IP) => {
-    if(properties.chances == 0) {
+    if(properties.chances == 0) { // server is no longer active
       active_servers.delete(IP);
       console.log(`Server ${IP} is no longer active. Deleting from active servers.`);
       return;
-    } else {
+    } else { // server is active
       console.log(`Sending heartbeat to ${IP}.`);
       udp.send(IP, properties.PORT, 'Heartbeat');
       active_servers.set(IP, {chances: properties.chances - 1, PORT: properties.PORT});
