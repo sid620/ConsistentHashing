@@ -3,12 +3,13 @@ import * as net from 'net';
 import dgram from 'node:dgram';
 import * as os from 'os';
 import { get } from 'http';
-const heartbeat_port = process.env.HEARTBEAT_PORT ?? 8085;
+const server_heartbeat_port = process.env.HEARTBEAT_PORT ?? 8085;
 const server_name = process.env.SERVER_NAME ?? 'localhost';
+const node_heartbeat_port = process.env.NODE_HEARTBEAT_PORT ?? 8086;
 
 let client = new net.Socket();
-const socket = client.connect(heartbeat_port, server_name, function() {
-  client.write("Connect me as database!");
+const socket = client.connect(server_heartbeat_port, server_name, function() {
+  client.write(`Connect me as database!-${node_heartbeat_port}`);
 });
 
 socket.on('data', data => console.log(`Server Response : ${data}`));
@@ -37,7 +38,7 @@ const udp_socket = dgram.createSocket('udp4');
 console.log(`UDP socket created.`);
 
 // start udp server and bind it to the port
-udp_socket.bind(heartbeat_port, () => {
+udp_socket.bind(node_heartbeat_port, () => {
   const address = udp_socket.address();
   console.log(`Heartbeat UDP Process started on ${address.address}:${address.port}`);
 });
@@ -48,18 +49,12 @@ udp_socket.on('error', err => {
   udp_socket.close();
 });
 
-// let ignore_hearbeat = 3;
-
 // event listener for incoming messages
 udp_socket.on('message', (msg, rinfo) => {
   console.log(`UDP got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
   const messageString = msg.toString();
   if (messageString === "Heartbeat") {
-    // if(ignore_hearbeat > 0) {
-    //   ignore_hearbeat--;
-    //   return;
-    // }
 
     console.log(`Sending heartbeat to ${rinfo.address}:${rinfo.port}`);
 
@@ -76,16 +71,3 @@ udp_socket.on('message', (msg, rinfo) => {
   }
 });
 
-
-// send message to server every 5 seconds
-// setInterval(_ => {
-//   const responseMsg = "Heartbeat";
-//   udp_socket.send(responseMsg, (err) => {
-//     console.log(`Sending heartbeat to ${udp_socket.address().address}:${udp_socket.address().port}`);
-//     if (err) {
-//       console.error(`Error while sending response: ${err}`);
-//     } else {
-//       console.log(`data sent: Heartbeat, udp_socket.address().port, udp_socket.address().address`);
-//     }
-//   });
-// }, 5000);
