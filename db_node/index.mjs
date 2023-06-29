@@ -19,23 +19,8 @@ socket.on('close', err => console.log("Closed\n"));
 socket.on('error', err => console.log(err));
 
 
-// store own ip address in a variable
-const get_ip = _ => {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        return iface.address;
-      }
-    }
-  }
-}
-console.log(get_ip());
-
-
 // create socket
 const udp_socket = dgram.createSocket('udp4');
-console.log(`UDP socket created.`);
 
 // start udp server and bind it to the port
 udp_socket.bind(node_heartbeat_port, () => {
@@ -51,23 +36,14 @@ udp_socket.on('error', err => {
 
 // event listener for incoming messages
 udp_socket.on('message', (msg, rinfo) => {
-  console.log(`UDP got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
   const messageString = msg.toString();
   if (messageString === "Heartbeat") {
 
-    console.log(`Sending heartbeat to ${rinfo.address}:${rinfo.port}`);
-
     // Send the response back to the sender
     const responseMsg = "Heartbeat";
 
-    udp_socket.send(responseMsg, rinfo.port, rinfo.address, (err) => {
-      if (err) {
-        console.error(`Error while sending response: ${err}`);
-      } else {
-        console.log(`response sent: Heartbeat, ${rinfo.address}, ${rinfo.port}`);
-      }
-    });
+    udp_socket.send(responseMsg, rinfo.port, rinfo.address);
   }
 });
 
