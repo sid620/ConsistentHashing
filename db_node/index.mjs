@@ -36,14 +36,6 @@ udp_socket.on('error', err => {
 
 // event listener for incoming messages
 udp_socket.on('message', (msg, rinfo) => {
-
-  const messageString = msg.toString();
-  if (messageString === "Heartbeat") {
-
-    // Send the response back to the sender
-    const responseMsg = "Heartbeat";
-
-    udp_socket.send(responseMsg, rinfo.port, rinfo.address);
-  }
+  udp_socket.send(msg, rinfo.port, rinfo.address);
 });
 

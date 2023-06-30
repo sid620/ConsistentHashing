@@ -15,12 +15,19 @@ const udp = get_udp_socket(server_name, heartbeat_port);
 // maintain a map of active servers and their chances i.e IP -> chance
 const active_servers = new Map<string, {chances: number, PORT: number}>();
 
+// function for logging received messages
+const log_message = (IP: string, PORT: number, message: string) => {
+  console.log(`Message received from ${IP}:${PORT} - ${message}`);
+}
+
+
 // Register TCP Events
 tcp.onNewConnection((IP, PORT) => console.log(`${IP}:${PORT} - Connection established`));
 
 tcp.onMessage((IP, PORT, data) => {
   const data_received = data.split('-');
-  // console.log(`Received data from ${IP}:${PORT} - ${data}`);
+  log_message(IP, PORT, data);
+
   if (data_received[0] == "Connect me as database!") {
     active_servers.set(IP, {chances: chance_limit, PORT: parseInt(data_received[1])});
     tcp.send(IP, PORT, 'Registered as database node.');
@@ -49,12 +56,9 @@ setInterval(() => {
 
 // heartbeat response handler
 udp.onMessage((IP, PORT, message) => {
-
+  log_message(IP, PORT, message);
   if(message == "Heartbeat") {
-    if(active_servers.get(IP).chances < chance_limit-1) {
-      console.log(`Server ${IP}:${PORT} responded to heartbeat after ${chance_limit - active_servers.get(IP).chances - 1} attempts.`)
-    }
+    if(active_servers.get(IP).chances < chance_limit-1) console.log(`Server ${IP}:${PORT} responded to heartbeat after ${chance_limit - active_servers.get(IP).chances - 1} attempts.`);
     active_servers.set(IP, {chances: chance_limit, PORT: active_servers.get(IP).PORT});
   }
-
 });
