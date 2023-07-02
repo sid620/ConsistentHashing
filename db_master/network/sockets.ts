@@ -20,17 +20,23 @@ export function get_udp_socket(self_name: string, port: number) {
     console.log(`UDP Process started on ${address.address}:${address.port}`);
   });
 
+  const udp_emitter = new EventEmitter();
   const onMessage = (func: (IP: string, PORT: number, msg: string) => void) =>
     udp_socket.on('message', (msg, rinfo) => func(rinfo.address, rinfo.port, msg.toString('utf8')));
+  
+  const onSend = (func: (IP: string, PORT: number, msg: string) => void) => udp_emitter.on('on_msg_send', func);
 
   const onError = (func: (error: Error) => void) =>
     udp_socket.on("error", error => func(error));
 
-  const send = (address: string, port: number, msg: string) => udp_socket.send(msg, port, address);
+  const send = (address: string, port: number, msg: string) => {
+    udp_socket.send(msg, port, address);
+    udp_emitter.emit('on_msg_send', address, port, msg);
+  };
 
   const closeSocket = () => udp_socket.close();
 
-  return { onMessage, onError, send, closeSocket };
+  return { onMessage, onSend, onError, send, closeSocket };
 }
 
 export function get_tcp_socket(self_name: string, port: number) {
@@ -64,11 +70,13 @@ export function get_tcp_socket(self_name: string, port: number) {
   const tcp_emitter = new EventEmitter();
 
   const onMessage = (func: (IP: string, PORT: number, data: string) => void) => tcp_emitter.on('on_msg', func);
+  const onSend = (func: (IP: string, PORT: number, data: string) => void) => tcp_emitter.on('on_msg_send', func);
 
   const send = (IP: string, PORT: number, data: string) : void => {
     const name = verifyAddress(IP, PORT);
     const socket = connections[name];
     socket.write(data);
+    tcp_emitter.emit('on_msg_send', IP, PORT, data);
   };
 
   const onNewConnection = (func: (IP: string, PORT: number) => void) => tcp_emitter.on('on_new_conn', func);
@@ -102,7 +110,7 @@ export function get_tcp_socket(self_name: string, port: number) {
 
 
   return {
-    onMessage, send,
+    onMessage, onSend, send,
     onNewConnection, onConnectionClose, closeConnection,
     onConnectionError,
     onSocketError, closeSocket

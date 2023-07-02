@@ -1,4 +1,9 @@
 # ConsistentHashing
+## What to expect
+After completion of project, we will have a key-value store which is capable of horizontal scaling using consistent hashing algorithm. The `key` is supposed to be `string` and the `value` can be any valid JSON object. 
+
+During initial phase, we work with `value` as `string`.
+
 ## Project Flow
 First, we will implement heartbeat algorithm between server and database to keep track of which database are currently in the system.
 
@@ -11,28 +16,58 @@ We will not make our system partition tolerant, as our target is to simulate the
 
 ## Structure
 ### Container Types
-There are two types of containers that we will use to simulate the consistent hashing of database. One will act as a backend server which takes requests from client and delegate them to appropriate database container. Second type of container is a database container, which will contain data. Database containers will implement consistent hashing, so they can join and leave the system.
+There are three types of containers that we will use to simulate the consistent hashing of database.
 
-### Networking
-We will use the docker compose assigned network in our containers.
+- First type of container is a database node, which will contain data. Database containers will implement heartbeat algorithm, so they can join and leave the system and others can check their existence. These containers will be horizontally scaled.
+- Second type will act as database master which will take the request and delegate it to apropriate database nodes. There is only one database master in the project, and we will see if it can be extended to support horizontal scaling.
+- Third type will act as a backend server which takes requests from client and delegate them to database master. These act as a layer between client and database and have no memory of their own. So, they can be horizontally scaled easily.
 
-For the server, we will use two fixed ports and random ports:
+### Port mappings
+For database master,
 
-1. `8080`: To connect to multiple clients.
-2. `8081`: Port used by databases to register them for heartbeat.
-3. OS assigned random port when server makes a connection with database on port `8082` after database register itself for heartbeat.
+- `8081`: The port which is used by for all heartbeat communications. This is set in `DBM_HEARTBEAT_PORT` environment variable.
 
-For the database, we will have one fixed port and random ports:
+For database nodes,
 
-1. `8082`: This is the port on which our server will connect with the database.
-2. OS assigned random port when database registers itself with server port `8081` for heartbeat.
+- `8081`: The port which will be used for heartbeat communications for specific node. This can be different for different nodes and is specified using `SELF_HEARTBEAT_PORT` environment variable.
 
-For the client, we will expose port `8080` of server to port `8000` of the host. Thus, any device/application can talk to our database using the `8000` port on local host in (pubilc) network.
+### Environment Variables
 
-### IP resolution
-Since there is only one backend server and multiple databases that can come and go out of system, we propose the following:
+For database master,
 
-1. Server registers itself with the name `server` in the docker network. This will make an entry in network's DNS and we can directly find it in the code usig DNS query.
-2. Set environment variable in Server's image for the port of database on which server will initiate the connection. Name of variable: `DATABASE_CONNECTION_PORT`.
-3. Set the environment variable in Database's image for the port of server on which database needs to connect for heartbeat algorithm. Name of variable: `SERVER_HEARTBEAT_PORT`.
+- `DBM_NAME` - This is the name of databse master. This is used by all devices in the network to get the IP address of database master from DNS. This is required in master too, because master will open ports on this specific IP address.
+- `DBM_HEARTBEAT_PORT` - This is the number, which specifies the port for heartbeat communications from master (self).
+- `HEARTBEAT_INTERVAL_MS` - Integer value specifying the interval between consecutive heartbeats to specific node in milliseconds.
+- `MAX_HEARTBEAT_COUNT` - This specifies how many times we need to send heartbeat before declaring that the node is dead, if the node is not responding to heartbeats.
 
+For database nodes,
+
+- `DBM_NAME` - Same as environment variable of database master. Used by nodes to connect to this name for database registration.
+- `DBM_HEARTBEAT_PORT` - Same as above. Specifies which port to connect to in database master.
+- `SELF_HEARTBEAT_PORT` - This specifies the port which should be used for heartbeat communication for this specific node. This may or may not be different than server heartbeat port and the system makes no distinction.
+
+## Communication
+### Heartbeat
+
+#### Node registration
+Here are the steps to be followed by dabase node to register itself to database master:
+
+1. Connect with database master on heartbeat port opened there via TCP. The TCP port on self can be anything.
+2. Send the string `Connect me as database!-<PORT>` where `<PORT>` is the PORT on self which should be used for heartbeat communications from server.
+3. Three of the following cases will happen:
+   - Server sends `Invalid request parameter ..`, in which case client needs to send the appropriate message again. This occurs when the string sent doesn't match the format of string in step 2.
+  - Server sends `Registered as database node.`. In this case, connection is successful and TCP connection is closed from server.
+  - Any further attempts to register will simply fail and the TCP connection will be closed. Server will send the string `IP already registered`.
+
+#### Heartbeat Communication
+
+1. Server will send empty data to database node to the port specified in registration (via UDP).
+2. If the node replies within the time limits (interval * time gap), then the system continues to work. The data sent by node is simply ignored by the server.
+3. If the node doesn't reply in time, then the node is removed from the list of active nodes and no further requests will be sent to this IP address. Server will send a UDP packet with message `Removed as a database` to the target node. Reregistration will start from scratch if the node wants to reconnect and the state of data in node is assumed to be non existent.
+
+## Running
+Use the following command to make 5 instances of database nodes:
+
+```
+docker-compose up --build --scale db_node=5
+```

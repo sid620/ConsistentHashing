@@ -4,15 +4,18 @@ services:
   db_master:
     build: ./db_master
     environment:
-      - HEARTBEAT_PORT=8081
-      - SERVER_NAME=db_master
+      - DBM_NAME=db_master
+      - DBM_HEARTBEAT_PORT=8081
+      - HEARTBEAT_INTERVAL_MS=5000
+      - MAX_HEARTBEAT_COUNT=10
     networks:
       - chnetwork
-  db_node1:
+  db_node:
     build: ./db_node
     environment:
-      - HEARTBEAT_PORT=8081
-      - SERVER_NAME=db_master
+      - DBM_NAME=db_master
+      - DBM_HEARTBEAT_PORT=8081
+      - SELF_HEARTBEAT_PORT=8081
     networks:
       - chnetwork
     depends_on:
