@@ -1,6 +1,6 @@
 import {
   get_tcp_socket, get_udp_socket
-} from './network/sockets';
+} from './core_services/sockets';
 import * as config from './config';
 
 // Initialise server
