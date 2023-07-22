@@ -26,6 +26,11 @@ const active_servers = new Map<string, { chances: number, heartbeat_port: number
 tcp.onNewConnection((IP, PORT) => console.log(`${IP}:${PORT} - Connection established`));
 
 tcp.onMessage((IP, PORT, data) => {
+  if (IP in active_servers) {
+    tcp.send(IP, PORT, `IP already registered.`);
+    tcp.closeConnection(IP, PORT);
+  }
+  
   const data_received = data.split('-');
   const request_string = data_received[0];
   const request_port = data_received.length > 1 ? Number(data_received[1]) : NaN;
