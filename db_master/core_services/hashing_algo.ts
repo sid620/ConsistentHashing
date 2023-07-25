@@ -82,12 +82,12 @@ export const get_nearest_ip = (key: string) => {
     let root = vnode_tree.root;
     let nearest_vnode = null;
     while (root) {
-        if (root.val == key_location) {
-            nearest_vnode = root.val;
+        if (root.id == key_location) {
+            nearest_vnode = root.id;
             break;
         }
-        else if (root.val > key_location) {
-            nearest_vnode = root.val;
+        else if (root.id > key_location) {
+            nearest_vnode = root.id;
             root = root.left;
         }
         else {
@@ -95,8 +95,8 @@ export const get_nearest_ip = (key: string) => {
         }
     }
     if (!nearest_vnode) {
-        nearest_vnode = vnode_tree.getLeftMost;
+        nearest_vnode = vnode_tree.getLeftMost().id;
     }
     const nearest_ip = vnode_to_node.get(nearest_vnode);
-    return nearest_ip;
+    return { IP: nearest_ip, PORT: IPs.get(nearest_ip).PORT}
 }
