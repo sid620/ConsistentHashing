@@ -78,5 +78,25 @@ export const remove_node_by_vnode = (vnode: number) => {
 }
 
 export const get_nearest_ip = (key: string) => {
-
+    const key_location = compute_key_location(key);
+    let root = vnode_tree.root;
+    let nearest_vnode = null;
+    while (root) {
+        if (root.id == key_location) {
+            nearest_vnode = root.id;
+            break;
+        }
+        else if (root.id > key_location) {
+            nearest_vnode = root.id;
+            root = root.left;
+        }
+        else {
+            root = root.right;
+        }
+    }
+    if (!nearest_vnode) {
+        nearest_vnode = vnode_tree.getLeftMost().id;
+    }
+    const nearest_ip = vnode_to_node.get(nearest_vnode);
+    return { IP: nearest_ip, PORT: IPs.get(nearest_ip).PORT}
 }

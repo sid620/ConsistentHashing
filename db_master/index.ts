@@ -2,6 +2,7 @@ import {
   get_tcp_socket, get_udp_socket
 } from './core_services/sockets';
 import * as config from './config';
+import * as hashing_algo from './core_services/hashing_algo';
 
 // Initialise server
 const self_name = config.self_name;
@@ -29,7 +30,7 @@ tcp.onMessage((IP, PORT, data) => {
     tcp.send(IP, PORT, `IP already registered.`);
     tcp.closeConnection(IP, PORT);
   }
-
+  
   const data_received = data.split('-');
   const request_string = data_received[0];
   const request_port = data_received.length > 1 ? Number(data_received[1]) : NaN;
@@ -40,6 +41,8 @@ tcp.onMessage((IP, PORT, data) => {
     tcp.send(IP, PORT, `Invalid request '${data}'.`);
     return;
   }
+
+  hashing_algo.add_node(IP, request_port);
 
   active_servers.set(IP, {
     chances: max_heartbeat_count,
@@ -57,6 +60,7 @@ tcp.onConnectionClose((IP, PORT) => console.log(`Connection closed with ${IP}:${
 setInterval(() => {
   active_servers.forEach(({chances, heartbeat_port}, IP) => {
     if (chances == 0) {
+      hashing_algo.remove_node_by_ip(IP);
       active_servers.delete(IP);
       console.log(`Server ${IP}:${heartbeat_port} is down. Removing from active servers.`);
       udp.send(IP, heartbeat_port, 'Removed as a database');
