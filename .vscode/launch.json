@@ -1,0 +1,36 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.out",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb", // Path to your GDB executable
+            "filterStderr": false,
+            "filterStdout": false,
+            "externalConsole": false,
+            "internalConsoleOptions": "neverOpen",
+            "setupCommands": [
+                {
+                    "description": "Setting symbol-loading for debugging",
+                    "text": "directory ${workspaceFolder}/main.out",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build",
+            "logging": {
+                "moduleLoad": false,
+                "programOutput": false,
+                "trace": true,
+                "engineLogging": true
+            },
+            "launchCompleteCommand": "exec-run"
+        }
+    ]
+}
