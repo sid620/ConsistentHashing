@@ -22,6 +22,7 @@ namespace Network
     enum class IPType
     {
         NETWORK_ORDER_IP4,
+        HOST_ORDER_IP4,
         STRING_IP4
     };
 
@@ -34,9 +35,14 @@ namespace Network
         template <IPType Type>
         static IP Create(auto value);
 
-        operator uint32_t() const
+        uint32_t get_network_order() const
         {
             return ip4_n;
+        }
+
+        uint32_t get_host_order() const
+        {
+            return ntohl(ip4_n);
         }
 
         operator std::string() const
@@ -60,15 +66,19 @@ namespace Network
     template <IPType Type>
     IP IP::Create(auto value)
     {
-        constexpr auto is_little_endian = Type == IPType::NETWORK_ORDER_IP4;
+        constexpr auto is_network_order = Type == IPType::NETWORK_ORDER_IP4;
+        constexpr auto is_host_order = Type == IPType::HOST_ORDER_IP4;
         constexpr auto is_string = Type == IPType::STRING_IP4;
         constexpr auto is_value_uint32_t = std::is_integral<std::remove_cvref_t<decltype(value)>>::value;
         constexpr auto is_value_str = Network::is_string<decltype(value)>::value;
 
-        static_assert((is_little_endian && is_value_uint32_t) || (is_string && is_value_str), "Incompatible IP format");
+        static_assert((is_network_order && is_value_uint32_t) || (is_host_order && is_value_uint32_t) || (is_string && is_value_str), "Incompatible IP format");
 
-        if constexpr (is_little_endian)
+        if constexpr (is_network_order)
             return IP(value);
+
+        if constexpr (is_host_order)
+            return IP(htonl(value));
 
         if constexpr (is_string)
         {
